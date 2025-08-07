@@ -70,3 +70,47 @@ traducao_senioridade = {
 }
 df['senioridade'] = df['senioridade'].map(traducao_senioridade)
 ```
+
+# Aula 2: Preparação e Limpeza de Dados
+
+Nesta aula, focamos em técnicas para tratar dados ausentes e otimizar os tipos de dados (`dtypes`) das colunas, passos fundamentais para garantir a qualidade e a eficiência da análise.
+
+## Comandos e Métodos Essenciais
+
+### 1. Tratamento de Dados Ausentes (NaN)
+Valores ausentes podem distorcer análises. A primeira decisão é se vamos removê-los ou preenchê-los.
+
+- **`.dropna()`**: Remove todas as **linhas** que contêm pelo menos um valor nulo (NaN). É a abordagem mais simples, mas pode levar à perda de muitos dados se os valores ausentes estiverem espalhados.
+  ```python
+  df_sem_nulos = df.dropna()
+  ```
+
+### 2. Conversão de Tipos de Dados (`dtypes`)
+A otimização dos tipos de dados é crucial para economizar memória e acelerar o processamento.
+
+- **`.astype()`**: Converte uma coluna para um tipo específico.
+- **`.assign()`**: Permite criar ou modificar várias colunas de uma vez. É uma forma elegante de encadear múltiplas transformações, incluindo a conversão de tipos.
+
+**Tipos de Dados Comuns:**
+- **`int64`**: Para números inteiros.
+- **`float64`**: Para números com casas decimais.
+- **`category`**: Ideal para colunas de texto com um número limitado de valores únicos (categorias). Reduz drasticamente o uso de memória e acelera operações como `groupby`.
+
+```python
+df_otimizado = df_limpo.assign(
+    ano=df_limpo['ano'].astype('int64'),
+    usd=df_limpo['usd'].astype('int64'),
+    remoto=df_limpo['remoto'].astype('category'),
+    tamanho_empresa=df_limpo['tamanho_empresa'].astype('category')
+)
+```
+
+### 3. Salvando o DataFrame Processado
+Após a limpeza e preparação, salvamos o resultado para uso futuro.
+
+- **`.to_csv('nome_do_arquivo.csv', index=False)`**: Salva o DataFrame em um arquivo CSV.
+  - **`index=False`**: Impede que o Pandas salve o índice do DataFrame como uma coluna no arquivo, o que geralmente é o comportamento desejado.
+
+```python
+df_otimizado.to_csv('dados_tratados.csv', index=False)
+```
