@@ -114,3 +114,168 @@ Após a limpeza e preparação, salvamos o resultado para uso futuro.
 ```python
 df_otimizado.to_csv('dados_tratados.csv', index=False)
 ```
+
+# Aula 3: Crie Gráficos e Conte Histórias com os Dados
+
+Nesta aula, exploramos diversas bibliotecas de visualização de dados em Python para criar gráficos informativos e atraentes. O objetivo é transformar dados brutos em insights visuais que contam uma história.
+
+## Bibliotecas de Visualização
+
+-   **Matplotlib**: A biblioteca fundamental para criar gráficos estáticos em Python. Oferece controle granular sobre todos os elementos do gráfico.
+-   **Seaborn**: Construída sobre o Matplotlib, o Seaborn simplifica a criação de gráficos estatísticos complexos com menos código e um visual mais agradável por padrão.
+-   **Plotly Express**: Uma biblioteca de alto nível que facilita a criação de gráficos interativos e dinâmicos. Ideal para dashboards e análises exploratórias onde a interatividade é desejada.
+
+## Comandos e Métodos Essenciais
+
+### 1. Configuração do Matplotlib para Interatividade
+
+Para que o Matplotlib exiba gráficos em janelas interativas (em ambientes com interface gráfica), é necessário configurar o backend.
+
+```python
+import matplotlib
+matplotlib.use('TkAgg') # 'TkAgg' é um backend comum para exibir janelas
+import matplotlib.pyplot as plt
+```
+*   **`matplotlib.use('TkAgg')`**: Define o backend que o Matplotlib usará para renderizar os gráficos. `TkAgg` é uma boa escolha para ambientes de desktop. Se você estiver em um ambiente sem interface gráfica (como um servidor), esta linha pode ser comentada, e você deve optar por salvar os gráficos como arquivos (HTML ou imagem).
+
+### 2. Gráficos com Matplotlib
+
+#### Gráfico de Barras (`.plot(kind='bar')`)
+Usado para mostrar a distribuição de frequência de categorias.
+
+```python
+plt.figure(figsize=(10, 6)) # Define o tamanho da figura (largura, altura)
+ax = df_limpo['senioridade'].value_counts().plot(kind='bar')
+
+# Personalização: Título, rótulos dos eixos e anotações nas barras
+ax.set_title('Distribuição de Senioridade', fontsize=16)
+ax.set_xlabel('Nível de Senioridade', fontsize=12)
+ax.set_ylabel('Número de Profissionais', fontsize=12)
+
+# Adiciona os rótulos de dados em cada barra
+for p in ax.patches:
+    ax.annotate(str(p.get_height()), (p.get_x() * 1.005, p.get_height() * 1.005))
+
+plt.tight_layout() # Ajusta o layout para evitar sobreposição de elementos
+plt.show() # Exibe o gráfico
+```
+
+### 3. Gráficos com Seaborn
+
+#### Gráfico de Barras (`sns.barplot()`)
+Ideal para comparar valores numéricos entre diferentes categorias.
+
+```python
+import seaborn as sns
+# Calcula a média de USD por senioridade e ordena para o gráfico
+ordem = df_limpo.groupby('senioridade')['usd'].mean().sort_values(ascending=True).index
+
+plt.figure(figsize=(8, 5))
+sns.barplot(data=df_limpo, x='senioridade', y='usd', order=ordem, palette='viridis')
+plt.title('Salário Médio por Nível de Senioridade', fontsize=14)
+plt.xlabel('Senioridade', fontsize=12)
+plt.ylabel('Salário Médio Anual (USD)', fontsize=12)
+plt.tight_layout()
+plt.show()
+```
+*   **`palette='viridis'`**: Define a paleta de cores a ser usada no gráfico.
+
+#### Histograma (`sns.histplot()`)
+Mostra a distribuição de uma variável numérica, agrupando valores em "bins" (intervalos).
+
+```python
+plt.figure(figsize=(10, 5))
+sns.histplot(df_limpo['usd'], bins=50, kde=True, color='skyblue')
+plt.title('Distribuição de Salários Anuais', fontsize=14)
+plt.xlabel('Salário Anual (USD)', fontsize=12)
+plt.ylabel('Frequência', fontsize=12)
+plt.tight_layout()
+plt.show()
+```
+*   **`bins`**: Número de intervalos para agrupar os dados.
+*   **`kde=True`**: Adiciona uma estimativa de densidade de kernel (curva suave) que representa a distribuição dos dados.
+
+#### Boxplot (`sns.boxplot()`)
+Exibe a distribuição de dados numéricos para diferentes categorias, mostrando mediana, quartis e outliers.
+
+```python
+# Define a ordem manual das categorias para exibição no gráfico
+ordem_senioridade = ['Júnior', 'Pleno', 'Sênior', 'Executivo']
+
+plt.figure(figsize=(8, 5))
+sns.boxplot(x='senioridade', y='usd', data=df_limpo, order=ordem_senioridade, palette='Set2', hue='senioridade', legend=False)
+plt.title('Boxplot de Salários Anuais por Nível de Senioridade', fontsize=14)
+plt.xlabel('Nível de Senioridade', fontsize=12)
+plt.ylabel('Salário Anual (USD)', fontsize=12)
+plt.tight_layout()
+plt.show()
+```
+*   **`order`**: Controla a ordem das categorias no eixo x.
+*   **`palette='Set2'`**: Outra opção de paleta de cores.
+*   **`hue`**: Divide os dados por uma variável categórica, criando boxplots separados para cada grupo.
+*   **`legend=False`**: Remove a legenda, pois o `hue` está usando a mesma variável do eixo x.
+
+### 4. Gráficos Interativos com Plotly Express
+
+Plotly Express (`px`) é uma interface de alto nível para o Plotly, ideal para criar rapidamente gráficos interativos.
+
+#### Gráfico de Pizza (`px.pie()`)
+Usado para mostrar a proporção de cada categoria em relação ao todo.
+
+```python
+import plotly.express as px
+# Prepara os dados para o gráfico de pizza (contagem de tipos de trabalho)
+remoto_contagem = df_limpo['remoto'].value_counts().reset_index()
+remoto_contagem.columns = ['tipo_trabalho', 'quantidade']
+
+fig = px.pie(remoto_contagem,
+                names='tipo_trabalho',
+                values='quantidade',
+                title='Proporção dos Tipos de Trabalho',
+                hole=0.5 # Cria um gráfico de rosca (donut chart)
+)
+
+# Personaliza a exibição de texto dentro das fatias
+fig.update_traces(textposition='inside', textinfo='percent+label')
+
+# Opções de visualização/salvamento do gráfico Plotly:
+# 1. Exibir em uma janela do navegador (requer ambiente gráfico e navegador configurado)
+# fig.show()
+
+# 2. Salvar como arquivo HTML (mantém a interatividade, pode ser aberto em qualquer navegador)
+fig.write_html("grafico_proporcao_trabalho.html")
+
+# 3. Salvar como imagem estática (requer a instalação da biblioteca 'kaleido': pip install kaleido)
+# fig.write_image("grafico_proporcao_trabalho.png")
+```
+*   **`names`**: Coluna para os rótulos das fatias.
+*   **`values`**: Coluna para os tamanhos das fatias.
+*   **`hole`**: Cria um gráfico de rosca (donut chart) se o valor for > 0 e < 1.
+*   **`fig.update_traces(textposition='inside', textinfo='percent+label')`**: Configura o texto exibido dentro das fatias (percentual e rótulo).
+*   **`fig.show()`**: Tenta abrir o gráfico em uma nova aba do navegador. Pode não funcionar em ambientes CLI sem um navegador configurado.
+*   **`fig.write_html("nome_do_arquivo.html")`**: Salva o gráfico interativo como um arquivo HTML.
+*   **`fig.write_image("nome_do_arquivo.png")`**: Salva o gráfico como uma imagem estática (PNG, JPEG, SVG, etc.). Requer a instalação da biblioteca `kaleido` (`pip install kaleido`).
+
+#### Gráfico de Barras (`px.bar()`)
+Versão interativa do gráfico de barras, permitindo zoom, pan e tooltips.
+
+```python
+# Reutiliza os dados de salário médio por senioridade para um gráfico interativo.
+senioridade_media_salario = df_limpo.groupby('senioridade')['usd'].mean().sort_values(ascending=False).reset_index()
+
+fig_bar_plotly = px.bar(senioridade_media_salario,
+                x='senioridade',
+                y='usd',
+                title='Salário Médio por Nível de Senioridade (Interativo)',
+                labels={'usd': 'Salário Anual (USD)', 'senioridade': 'Nível de Senioridade'},
+                color='senioridade', # Colore as barras por senioridade
+                template='plotly_white' # Define um tema visual
+)
+
+# Opções de visualização/salvamento do gráfico Plotly:
+# fig_bar_plotly.show()
+fig_bar_plotly.write_html("grafico_salario_senioridade_interativo.html")
+# fig_bar_plotly.write_image("grafico_salario_senioridade_interativo.png")
+```
+*   **`color`**: Mapeia uma coluna para a cor das barras.
+*   **`template`**: Define um tema visual para o gráfico (ex: 'plotly_white', 'plotly_dark').
